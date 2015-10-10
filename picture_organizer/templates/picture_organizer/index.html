@@ -1,0 +1,93 @@
+{% extends "picture_organizer/base.html" %}
+
+{% block title %}Picture Organizer{% endblock title %}
+
+{% block content %}
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Start Bootstrap</a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="#">About</a>
+                    </li>
+                    <li>
+                        <a href="#">Services</a>
+                    </li>
+                    <li>
+                        <a href="#">Contact</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+
+        <!-- Page Heading -->
+        <div class="row">
+            <div class="col-lg-12">
+                <h1 class="page-header">Page Heading
+                    <small>Secondary Text</small>
+                </h1>
+            </div>
+        </div>
+        <!-- /.row -->
+
+        <!-- Page Heading -->
+        <div class="row">
+            <div class="col-md-3">
+                <input id="file_list" type="file" webkitdirectory directory multiple/>
+            </div>
+
+            <div class="col-md-3">
+                <label for="tile_size">Select Tile Size</label>
+                <select id="tile_size" name="tile_size">
+                    <option value="100x100">100 x 100</option>
+                    <option value="150x150">150 x 150</option>
+                    <option value="200x200">200 x 200</option>
+                    <option value="250x250" selected>250 x 250</option>
+                    <option value="300x300">300 x 300</option>
+                    <option value="350x350">350 x 350</option>
+                    <option value="400x400">400 x 400</option>
+                    <option value="450x450">450 x 450</option>
+                </select>
+            </div>
+        </div>
+
+        <br/>
+
+        <!-- Rows -->
+        <div id="columns"></div>
+
+        <hr>
+
+        <!-- Footer -->
+        <footer>
+            <div class="row">
+                <div class="col-lg-12">
+                    <!--<p>Copyright &copy; Your Website 2014</p>-->
+                </div>
+            </div>
+            <!-- /.row -->
+        </footer>
+
+    </div>
+    <!-- /.container -->
+
+{% endblock content %}
