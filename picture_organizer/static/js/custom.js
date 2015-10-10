@@ -67,6 +67,12 @@ function handleDragEnd(e) {
 function handleFileSelect(evt) {
     var files = evt.target.files; // FileList object
 
+    $.ajax({
+        "url": "/get_files?folder=" + files[0].webkitRelativePath
+    }).done(function (data) {
+        console.dir(data);
+    });
+
     var order = 1;
 
     // Loop through the FileList and render image files as thumbnails.
@@ -87,8 +93,9 @@ function handleFileSelect(evt) {
           div.className = "portfolio-item column";
           div.draggable = true;
           div.innerHTML = ['<header>', order++,'</header>',
-            '<a href="#"><img class="img-responsive tile" src="', e.target.result,
-              '" title="', escape(theFile.name), '" alt=""/></a>'].join('');
+            '<a href="#" data-toggle="modal" data-target="#pictureModal" onclick="return pictureClick(this);">',
+              '<img class="img-responsive tile" src="', e.target.result, '" title="', escape(theFile.name), '"/>',
+            '</a>'].join('');
           document.getElementById('columns').insertBefore(div, null);
 
           resizeTiles();
@@ -113,13 +120,26 @@ function resizeTiles() {
     var cols = document.querySelectorAll('#columns .column');
     [].forEach.call(cols, function(col) {
         col.style.setProperty('height', size_split[0]);
-        col.style.setProperty('width', size_split[0]);
+        col.style.setProperty('width', size_split[1]);
     });
 
     // Set tiles height to fit in the column box
     [].forEach.call(tiles, function(tile) {
         tile.style.setProperty('height', Math.min(size_split[0] - 36, tile.clientHeight));
     });
+}
+
+function pictureClick(link) {
+    var pictureSrc = link.firstChild.src;
+    var pictureTitle = link.firstChild.title;
+    var headerNumber = link.previousSibling.innerHTML;
+
+    document.getElementsByClassName('modal-title')[0].innerHTML = headerNumber + ' - ' + pictureTitle;
+    document.getElementsByClassName('modal-body')[0].innerHTML = [
+        '<img class="img-responsive" src="', pictureSrc, '" title="', headerNumber, '"/>'
+    ].join('');
+
+    return false;
 }
 
 document.getElementById('file_list').addEventListener('change', handleFileSelect, false);

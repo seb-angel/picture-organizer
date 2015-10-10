@@ -66,3 +66,8 @@
 .tile {
     margin: 0 auto 10px;
 }
+
+.square-thumb {
+    width: 400px;
+    height: 400px;
+}
