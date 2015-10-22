@@ -1,6 +1,6 @@
 {% extends "picture_organizer/base.html" %}
 
-{% block title %}Picture Organizer for my wife{% endblock title %}
+{% block title %}Picture Organizer{% endblock title %}
 
 {% block content %}
 
@@ -15,7 +15,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">Picture Organizer for my wife</a>
+                <a class="navbar-brand" href="#">Picture Organizer</a>
             </div>
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -52,7 +52,13 @@
         <!-- Page Heading -->
         <div class="row">
             <div class="col-md-3">
-                <input id="file_list" type="file" webkitdirectory directory multiple/>
+                <!--<input id="file_list" type="file" webkitdirectory directory multiple/>-->
+                <div class="input-group">
+                    <input type="text" id="folder_input" class="form-control" placeholder="Input folder...">
+                    <span class="input-group-btn">
+                        <button id="folder_input_btn" class="btn btn-default" type="button">Import!</button>
+                    </span>
+                </div>
             </div>
 
             <div class="col-md-3">
@@ -67,6 +73,15 @@
                     <option value="400x400">400 x 400</option>
                     <option value="450x450">450 x 450</option>
                 </select>
+            </div>
+
+            <div class="col-md-3">
+                <div class="input-group">
+                    <input type="text" id="folder_output" class="form-control" placeholder="Save to folder...">
+                    <span class="input-group-btn">
+                        <button id="folder_output_btn" class="btn btn-default" type="button">Save!</button>
+                    </span>
+                </div>
             </div>
         </div>
 

@@ -38,9 +38,13 @@ function handleDrop(e) {
 
   // Don't do anything if dropping the same column we're dragging.
   if (dragSrcEl != this) {
-    // Set the source column's HTML to the HTML of the column we dropped on.
-    dragSrcEl.innerHTML = this.innerHTML;
-    this.innerHTML = e.dataTransfer.getData('text/html');
+    // Insert the column before the selected one
+    dragSrcEl.remove();
+    var div = document.createElement('div');
+    div.className = "portfolio-item column";
+    div.draggable = true;
+    div.innerHTML = e.dataTransfer.getData('text/html');
+    this.parentNode.insertBefore(div, this);
   }
 
   var cols = document.querySelectorAll('#columns .column');
@@ -142,7 +146,7 @@ function pictureClick(link) {
     return false;
 }
 
-document.getElementById('file_list').addEventListener('change', handleFileSelect, false);
+//document.getElementById('file_list').addEventListener('change', handleFileSelect, false);
 
 document.getElementById('tile_size').addEventListener('change', resizeTiles, false);
 
@@ -150,11 +154,38 @@ setInterval(function() {
     // Initialize tiles
     var cols = document.querySelectorAll('#columns .column');
     [].forEach.call(cols, function(col) {
-      col.addEventListener('dragstart', handleDragStart, false);
-      col.addEventListener('dragenter', handleDragEnter, false)
-      col.addEventListener('dragover', handleDragOver, false);
-      col.addEventListener('dragleave', handleDragLeave, false);
-      col.addEventListener('drop', handleDrop, false);
-      col.addEventListener('dragend', handleDragEnd, false);
+        col.addEventListener('dragstart', handleDragStart, false);
+        col.addEventListener('dragenter', handleDragEnter, false)
+        col.addEventListener('dragover', handleDragOver, false);
+        col.addEventListener('dragleave', handleDragLeave, false);
+        col.addEventListener('drop', handleDrop, false);
+        col.addEventListener('dragend', handleDragEnd, false);
     });
 }, 1000);
+
+
+function handleFolderInput(evt) {
+    var folder_input = document.getElementById('folder_input');
+    $.ajax({
+        "url": "/get_files?folder=" + folder_input.value
+    }).done(function (data) {
+        data = data['data'];
+        var media_folder = '{{MEDIA_URL}}';
+        for (var i = 0; i < data.length; i++) {
+            // Render thumbnail.
+            var div = document.createElement('div');
+            div.className = "portfolio-item column";
+            div.draggable = true;
+            div.innerHTML = ['<header>', i+1, '</header>',
+                '<a href="#" data-toggle="modal" data-target="#pictureModal" onclick="return pictureClick(this);">',
+                    '<img class="img-responsive tile" src="static/media/', data[i]['file_path'], '" title="', escape(data[i]['title']), '"/>',
+                '</a>'].join('');
+            document.getElementById('columns').insertBefore(div, null);
+        }
+
+        setInterval(function() {
+            resizeTiles();
+        }, 1000);
+    });
+}
+$('#folder_input_btn').click(handleFolderInput);
