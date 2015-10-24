@@ -8,6 +8,7 @@ function handleDragStart(e) {
 
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/html', this.innerHTML);
+  e.dataTransfer.setData('original_file_name', this.getAttribute('data-original_file_name'));
 }
 
 function handleDragOver(e) {
@@ -43,6 +44,7 @@ function handleDrop(e) {
     var div = document.createElement('div');
     div.className = "portfolio-item column";
     div.draggable = true;
+    div.setAttribute('data-original_file_name', e.dataTransfer.getData('original_file_name'));
     div.innerHTML = e.dataTransfer.getData('text/html');
     this.parentNode.insertBefore(div, this);
   }
@@ -57,7 +59,6 @@ function handleDrop(e) {
   return false;
 }
 
-
 function handleDragEnd(e) {
   // this/e.target is the source node.
   var cols = document.querySelectorAll('#columns .column');
@@ -65,50 +66,6 @@ function handleDragEnd(e) {
     col.classList.remove('moving');
     col.classList.remove('over');
   });
-}
-
-
-function handleFileSelect(evt) {
-    var files = evt.target.files; // FileList object
-
-    $.ajax({
-        "url": "/get_files?folder=" + files[0].webkitRelativePath
-    }).done(function (data) {
-        console.dir(data);
-    });
-
-    var order = 1;
-
-    // Loop through the FileList and render image files as thumbnails.
-    for (var i = 0, f; f = files[i]; i++) {
-
-      // Only process image files.
-      if (!f.type.match('image.*')) {
-        continue;
-      }
-
-      var reader = new FileReader();
-
-      // Closure to capture the file information.
-      reader.onload = (function(theFile) {
-        return function(e) {
-          // Render thumbnail.
-          var div = document.createElement('div');
-          div.className = "portfolio-item column";
-          div.draggable = true;
-          div.innerHTML = ['<header>', order++,'</header>',
-            '<a href="#" data-toggle="modal" data-target="#pictureModal" onclick="return pictureClick(this);">',
-              '<img class="img-responsive tile" src="', e.target.result, '" title="', escape(theFile.name), '"/>',
-            '</a>'].join('');
-          document.getElementById('columns').insertBefore(div, null);
-
-          resizeTiles();
-        };
-      })(f);
-
-      // Read in the image file as a data URL.
-      reader.readAsDataURL(f);
-    }
 }
 
 function resizeTiles() {
@@ -134,19 +91,31 @@ function resizeTiles() {
 }
 
 function pictureClick(link) {
-    var pictureSrc = link.firstChild.src;
-    var pictureTitle = link.firstChild.title;
+    var pictureSrc = 'media/' + link.parentNode.getAttribute('data-original_file_name');
+    var pictureTitle = unescape(link.firstChild.title);
     var headerNumber = link.previousSibling.innerHTML;
 
-    document.getElementsByClassName('modal-title')[0].innerHTML = headerNumber + ' - ' + pictureTitle;
+    document.getElementsByClassName('modal-title')[0].innerHTML =
+        headerNumber + ' - <a href="#" id="file_name" class="edit_file_name">' + pictureTitle + '</a>';
     document.getElementsByClassName('modal-body')[0].innerHTML = [
-        '<img class="img-responsive" src="', pictureSrc, '" title="', headerNumber, '"/>'
+        '<div class="row"><div class="col-lg-12">',
+            '<img class="img-responsive img-center" src="', pictureSrc, '" title="', headerNumber, '"/>',
+        '</div></div>'
     ].join('');
+
+    $.fn.editable.defaults.mode = 'inline';
+    $('.edit_file_name').editable({
+        success: function(response, newValue) {
+            $.ajax({
+                "url": "/change_file_name?from_name=" + escape(this.text) + "&to_name=" + escape(newValue)
+            }).done(function(data) {
+                link.parentNode.setAttribute('data-original_file_name', newValue);
+            })
+        }
+    });
 
     return false;
 }
-
-//document.getElementById('file_list').addEventListener('change', handleFileSelect, false);
 
 document.getElementById('tile_size').addEventListener('change', resizeTiles, false);
 
@@ -164,10 +133,11 @@ setInterval(function() {
 }, 1000);
 
 
-function handleFolderInput(evt) {
-    var folder_input = document.getElementById('folder_input');
+function handleInputFolder(evt) {
+    var input_folder = document.getElementById('input_folder');
+    $('#input_folder_btn').toggleClass('active');
     $.ajax({
-        "url": "/get_files?folder=" + folder_input.value
+        "url": "/get_files?input_folder=" + encodeURIComponent(input_folder.value)
     }).done(function (data) {
         data = data['data'];
         var media_folder = '{{MEDIA_URL}}';
@@ -176,16 +146,47 @@ function handleFolderInput(evt) {
             var div = document.createElement('div');
             div.className = "portfolio-item column";
             div.draggable = true;
+            div.setAttribute('data-original_file_name', data[i]['original_file_name']);
             div.innerHTML = ['<header>', i+1, '</header>',
                 '<a href="#" data-toggle="modal" data-target="#pictureModal" onclick="return pictureClick(this);">',
-                    '<img class="img-responsive tile" src="static/media/', data[i]['file_path'], '" title="', escape(data[i]['title']), '"/>',
+                    '<img class="img-responsive tile" src="media/', data[i]['thumbnail_file_name'], '" title="',
+                    escape(data[i]['original_file_name']), '"/>',
                 '</a>'].join('');
             document.getElementById('columns').insertBefore(div, null);
         }
 
-        setInterval(function() {
+        setTimeout(function() {
             resizeTiles();
+
+            $('#input_folder_btn').toggleClass('active');
+
+            $.fn.editable.defaults.mode = 'inline';
+            $('.edit_tile_number').editable({
+                success: function(response, newValue) {
+                    // TODO
+                }
+            });
         }, 1000);
     });
 }
-$('#folder_input_btn').click(handleFolderInput);
+$('#input_folder_btn').click(handleInputFolder);
+
+
+function handleOutputFolder(evt) {
+    var output_folder = document.getElementById('output_folder');
+    var columns = document.getElementById('columns');
+    var files_ordered = [];
+
+    for (var i = 0; i < columns.children.length; i++) {
+        var file_name = columns.children[i].getAttribute('data-original_file_name');
+        files_ordered.push(file_name);
+    }
+
+    $.ajax({
+        "url": "/save_files?output_folder=" + encodeURIComponent(output_folder.value) +
+                           "&files_ordered=" + encodeURIComponent(files_ordered)
+    }).done(function (data) {
+        console.dir(data);
+    });
+}
+$('#output_folder_btn').click(handleOutputFolder);

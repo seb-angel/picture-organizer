@@ -54,9 +54,12 @@
             <div class="col-md-3">
                 <!--<input id="file_list" type="file" webkitdirectory directory multiple/>-->
                 <div class="input-group">
-                    <input type="text" id="folder_input" class="form-control" placeholder="Input folder...">
+                    <input type="text" id="input_folder" class="form-control" placeholder="Get pictures from folder...">
                     <span class="input-group-btn">
-                        <button id="folder_input_btn" class="btn btn-default" type="button">Import!</button>
+                        <button id="input_folder_btn" class="btn btn-default has-spinner" type="button">
+                            <span class="spinner"><i class="icon-spin icon-refresh"></i></span>
+                            Import
+                        </button>
                     </span>
                 </div>
             </div>
@@ -77,9 +80,9 @@
 
             <div class="col-md-3">
                 <div class="input-group">
-                    <input type="text" id="folder_output" class="form-control" placeholder="Save to folder...">
+                    <input type="text" id="output_folder" class="form-control" placeholder="Save to folder...">
                     <span class="input-group-btn">
-                        <button id="folder_output_btn" class="btn btn-default" type="button">Save!</button>
+                        <button id="output_folder_btn" class="btn btn-default" type="button">Save</button>
                     </span>
                 </div>
             </div>

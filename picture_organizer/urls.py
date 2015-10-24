@@ -13,7 +13,7 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-from picture_organizer.views import index, get_files
+from picture_organizer.views import index, get_files, save_files, change_file_name
 from django.conf.urls.static import static
 from django.conf.urls import include, url
 from django.contrib import admin
@@ -22,5 +22,7 @@ from django.conf import settings
 urlpatterns = [
     url(r'^$', index, name='index'),
     url(r'^get_files/$', get_files, name='get_files'),
+    url(r'^save_files/$', save_files, name='save_files'),
+    url(r'^change_file_name/$', change_file_name, name='change_file_name'),
     # url(r'^admin/', include(admin.site.urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
