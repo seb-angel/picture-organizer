@@ -54,7 +54,7 @@
             <div class="col-md-3">
                 <!--<input id="file_list" type="file" webkitdirectory directory multiple/>-->
                 <div class="input-group">
-                    <input type="text" id="input_folder" class="form-control" placeholder="Get pictures from folder...">
+                    <input type="text" id="input_folder" class="form-control" autofocus placeholder="Get pictures from folder...">
                     <span class="input-group-btn">
                         <button id="input_folder_btn" class="btn btn-default has-spinner" type="button">
                             <span class="spinner"><i class="icon-spin icon-refresh"></i></span>
@@ -62,6 +62,10 @@
                         </button>
                     </span>
                 </div>
+            </div>
+
+            <div class="col-md-3">
+                <div id="progress"></div>
             </div>
 
             <div class="col-md-3">
@@ -93,7 +97,7 @@
         <!-- Rows -->
         <div id="columns"></div>
 
-        <hr>
+        <!--<hr>-->
 
         <!-- Footer -->
         <footer>
@@ -120,6 +124,7 @@
           </div>
           <div class="modal-body"></div>
           <div class="modal-footer">
+            <button type="button" id="delete_tile_btn" class="btn btn-danger" data-dismiss="modal">Delete</button>
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           </div>
         </div>

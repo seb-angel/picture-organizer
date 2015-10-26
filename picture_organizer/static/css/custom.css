@@ -95,3 +95,8 @@
   opacity: 1;
   width: auto; /* This doesn't work, just fix for unkown width elements */
 }
+
+.edit_tile_number {
+  color: #fff;
+  text-shadow: #000 0 1px;
+}
