@@ -271,6 +271,7 @@ function handleInputFolder(evt) {
     });
 }
 $('#input_folder_btn').click(handleInputFolder);
+$('#input_folder').keypress(handleInputFolder);
 
 
 function handleOutputFolder(evt) {
