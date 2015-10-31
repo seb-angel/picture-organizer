@@ -60,6 +60,7 @@ function handleDrop(e) {
     $(cols[i]).find('.edit_tile_number').editable('setValue', i+1);
     $(cols[i]).find('.edit_tile_number').editable({
         success: function(response, newValue) {
+            console.log(isNaN(newValue));
             if (!isNaN(newValue)) {
                 var tile_found = false;
                 var tile_from = null;
@@ -93,6 +94,40 @@ function handleDragEnd(e) {
   });
 }
 
+function removeFileExtension(file_name) {
+    return file_name.split('.')[0];
+}
+
+function pictureClick(link) {
+    var pictureSrc = 'media/' + link.parentNode.getAttribute('data-original_file_name');
+    var pictureTitle = unescape(link.firstChild.title);
+    var headerNumber = $(link.previousSibling.firstChild).editable('getValue', true);
+
+    document.getElementsByClassName('modal-title')[0].innerHTML =
+        '<span id="tile_number">' + headerNumber + '</span> - <a href="#" class="edit_file_name">' + removeFileExtension(pictureTitle) + '</a>';
+    document.getElementsByClassName('modal-body')[0].innerHTML = [
+        '<div class="row"><div class="col-lg-12">',
+            '<img class="img-responsive img-center" src="', pictureSrc, '" title="', pictureTitle, '"/>',
+        '</div></div>'
+    ].join('');
+
+    $.fn.editable.defaults.mode = 'inline';
+    $('.edit_file_name').editable({
+        success: function(response, newValue) {
+            $.ajax({
+                "url": "/change_file_name?from_name=" + escape(this.text) + "&to_name=" + escape(newValue)
+            }).done(function(data) {
+                link.parentNode.setAttribute('data-original_file_name', newValue);
+                link.firstChild.title = removeFileExtension(newValue);
+                link.firstChild.src = 'media/' + data['data']['thumbnail'];
+            })
+        }
+    });
+    $.fn.editable.defaults.mode = 'popup';
+
+    return false;
+}
+
 function resizeTiles() {
     var size_dd = document.getElementById("tile_size");
     var size_split = size_dd.options[size_dd.selectedIndex].value.split('x');
@@ -114,36 +149,6 @@ function resizeTiles() {
         tile.style.setProperty('height', Math.min(size_split[0] - 36, tile.clientHeight));
     });
 }
-
-function pictureClick(link) {
-    var pictureSrc = 'media/' + link.parentNode.getAttribute('data-original_file_name');
-    var pictureTitle = unescape(link.firstChild.title);
-    var headerNumber = $(link.previousSibling.firstChild).editable('getValue', true);
-
-    document.getElementsByClassName('modal-title')[0].innerHTML =
-        '<span id="tile_number">' + headerNumber + '</span> - <a href="#" class="edit_file_name">' + pictureTitle + '</a>';
-    document.getElementsByClassName('modal-body')[0].innerHTML = [
-        '<div class="row"><div class="col-lg-12">',
-            '<img class="img-responsive img-center" src="', pictureSrc, '" title="', pictureTitle, '"/>',
-        '</div></div>'
-    ].join('');
-
-    $.fn.editable.defaults.mode = 'inline';
-    $('.edit_file_name').editable({
-        success: function(response, newValue) {
-            $.ajax({
-                "url": "/change_file_name?from_name=" + escape(this.text) + "&to_name=" + escape(newValue)
-            }).done(function(data) {
-                link.parentNode.setAttribute('data-original_file_name', newValue);
-                link.firstChild.title = newValue;
-                link.firstChild.src = 'media/' + data['data']['thumbnail'];
-            })
-        }
-    });
-
-    return false;
-}
-
 document.getElementById('tile_size').addEventListener('change', resizeTiles, false);
 
 setInterval(function() {
@@ -185,25 +190,22 @@ setInterval(function() {
 
 var progress_bar_interval = null;
 function show_progress_bar() {
+    $('.progress').fadeIn('slow');
+
     progress_bar_interval = setInterval(function() {
         // Update progress bar
         $.ajax({
             "url": "/get_progress"
         }).done(function (data) {
             var progress = data['data']['progress'];
-            $('#progress').html([
-                '<div class="progress progress-striped active">',
-                    '<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="', progress, '" ',
-                        'aria-valuemin="0" aria-valuemax="100" style="width: ', progress, '%;">',
-                        '<span class="sr-only">', progress, '% Complete</span>',
-                    '</div>',
-                '</div>'
-            ].join(''));
 
-            if (progress == 100 || progress == '') {
+            $('.progress-bar').css('width', progress + '%').attr('aria-valuenow', progress).html(progress + '%')
+
+            if (progress == 100) {
+                resizeTiles();
                 clearInterval(progress_bar_interval);
                 setTimeout(function() {
-                    $('#progress').fadeOut('slow');
+                    $('.progress').fadeOut('slow');
                 }, 1000);
             }
         });
@@ -211,63 +213,60 @@ function show_progress_bar() {
 }
 
 
+function loadFiles(data) {
+    var media_folder = '{{MEDIA_URL}}';
+    for (var i = 0; i < data.length; i++) {
+        // Render thumbnail.
+        var size_dd = document.getElementById("tile_size");
+        var size_split = size_dd.options[size_dd.selectedIndex].value.split('x');
+        var div = document.createElement('div');
+        div.className = "portfolio-item column";
+        div.draggable = true;
+        div.style.setProperty('height', size_split[0]);
+        div.style.setProperty('width', size_split[1]);
+        div.setAttribute('data-original_file_name', data[i]['original_file_name']);
+        div.innerHTML = ['<header><a href="#" class="edit_tile_number"></a></header>',
+            '<a href="#" data-toggle="modal" data-target="#pictureModal" onclick="return pictureClick(this);">',
+                '<img class="img-responsive tile" src="media/', data[i]['thumbnail_file_name'], '" title="',
+                escape(data[i]['original_file_name']), '"/>',
+            '</a>'].join('');
+
+        document.getElementById('columns').insertBefore(div, null);
+
+        $(div).find('.edit_tile_number').editable({
+            value: $('#columns .column').length,
+            success: function(response, newValue) {
+                if (!isNaN(newValue)) {
+                    var tile_found = false;
+                    var tile_from = null;
+                    var tile_to_next_sibling = null;
+                    var this_tile_number = this.text;
+
+                    if (typeof tile_from !== 'undefined' && typeof tile_to_next_sibling !== 'undefined') {
+                        var cols = document.getElementById('columns');
+                        cols.insertBefore(cols.childNodes[this_tile_number - 1], cols.childNodes[newValue - 1]);
+                        for (var i = 0; i < cols.childNodes.length; i++) {
+                            $(cols.childNodes[i]).find('.edit_tile_number').editable('setValue', i+1);
+                        }
+                    }
+                }
+                else {
+                    $(this).editable('setValue', this.text); // Revert the change
+                }
+            }
+        });
+    }
+}
+
 function handleInputFolder(evt) {
     show_progress_bar();
     var input_folder = document.getElementById('input_folder');
-    $('#input_folder_btn').toggleClass('active');
     var is_new_batch = $('#columns .column').length === 0;
     $.ajax({
         "url": "/get_files?input_folder=" + encodeURIComponent(input_folder.value) + '&is_new_batch=' + is_new_batch
     }).done(function (data) {
         data = data['data'];
-        var media_folder = '{{MEDIA_URL}}';
-        for (var i = 0; i < data.length; i++) {
-            // Render thumbnail.
-            var size_dd = document.getElementById("tile_size");
-            var size_split = size_dd.options[size_dd.selectedIndex].value.split('x');
-            var div = document.createElement('div');
-            div.className = "portfolio-item column";
-            div.draggable = true;
-            div.style.setProperty('height', size_split[0]);
-            div.style.setProperty('width', size_split[1]);
-            div.setAttribute('data-original_file_name', data[i]['original_file_name']);
-            div.innerHTML = ['<header><a href="#" class="edit_tile_number"></a></header>',
-                '<a href="#" data-toggle="modal" data-target="#pictureModal" onclick="return pictureClick(this);">',
-                    '<img class="img-responsive tile" src="media/', data[i]['thumbnail_file_name'], '" title="',
-                    escape(data[i]['original_file_name']), '"/>',
-                '</a>'].join('');
-
-            document.getElementById('columns').insertBefore(div, null);
-
-            $(div).find('.edit_tile_number').editable({
-                value: $('#columns .column').length,
-                success: function(response, newValue) {
-                    if (!isNaN(newValue)) {
-                        var tile_found = false;
-                        var tile_from = null;
-                        var tile_to_next_sibling = null;
-                        var this_tile_number = this.text;
-
-                        if (typeof tile_from !== 'undefined' && typeof tile_to_next_sibling !== 'undefined') {
-                            var cols = document.getElementById('columns');
-                            cols.insertBefore(cols.childNodes[this_tile_number - 1], cols.childNodes[newValue - 1]);
-                            for (var i = 0; i < cols.childNodes.length; i++) {
-                                $(cols.childNodes[i]).find('.edit_tile_number').editable('setValue', i+1);
-                            }
-                        }
-                    }
-                    else {
-                        $(this).editable('setValue', this.text); // Revert the change
-                    }
-                }
-            });
-        }
-
-        setTimeout(function() {
-            resizeTiles();
-            $('#input_folder_btn').toggleClass('active');
-            $.fn.editable.defaults.mode = 'inline';
-        }, 1000);
+        loadFiles(data);
     });
 }
 $('#input_folder_btn').click(handleInputFolder);
@@ -289,10 +288,11 @@ function handleOutputFolder(evt) {
         "url": "/save_files?output_folder=" + encodeURIComponent(output_folder.value) +
                           "&files_ordered=" + encodeURIComponent(files_ordered)
     }).done(function (data) {
-        console.dir(data);
+        console.log('Save Files Done');
     });
 }
 $('#output_folder_btn').click(handleOutputFolder);
+$('#output_folder').keypress(handleOutputFolder);
 
 function handleDeleteTile(evt) {
     var file_name = $('.edit_file_name').editable('getValue', true);

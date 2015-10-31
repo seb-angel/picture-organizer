@@ -64,15 +64,20 @@
             </div>
 
             <div class="col-md-3">
-                <div id="progress"></div>
+                <div class="progress" style="display: none;">
+                    <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="0"
+                        aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                        0%
+                    </div>
+                </div>
             </div>
 
-            <div class="col-md-3">
-                <label for="tile_size">Select Tile Size</label>
+            <div class="col-md-2">
+                <label for="tile_size">Tile Size</label>
                 <select id="tile_size" name="tile_size">
                     <option value="100x100">100 x 100</option>
-                    <option value="150x150">150 x 150</option>
-                    <option value="200x200"selected>200 x 200</option>
+                    <option value="150x150" selected>150 x 150</option>
+                    <option value="200x200">200 x 200</option>
                     <option value="250x250">250 x 250</option>
                     <option value="300x300">300 x 300</option>
                     <option value="350x350">350 x 350</option>
@@ -85,7 +90,7 @@
                 <div class="input-group">
                     <input type="text" id="output_folder" class="form-control" placeholder="Save to folder...">
                     <span class="input-group-btn">
-                        <button id="output_folder_btn" class="btn btn-default" type="submit">Save</button>
+                        <button id="output_folder_btn" class="btn btn-primary" type="submit">Save</button>
                     </span>
                 </div>
             </div>

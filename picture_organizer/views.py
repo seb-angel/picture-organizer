@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 from PIL import Image
 from django.conf import settings
@@ -31,6 +32,7 @@ def mark_progress(func):
 
 class Data:
 
+    media_folder = settings.MEDIA_ROOT
     progress_file = os.path.join(settings.REPOSITORY_ROOT, 'picture_organizer', 'tmp', 'progress.txt')
 
     def __init__(self):
@@ -63,26 +65,30 @@ class Data:
         data = []
         os.path.supports_unicode_filenames = True
         if os.path.exists(input_folder):
-            media_folder = settings.MEDIA_ROOT
             if is_new_batch:  # Clean the media folder
-                for file_name in os.listdir(media_folder):
-                    os.remove(os.path.join(media_folder, file_name))
+                for file_name in os.listdir(cls.media_folder):
+                    os.remove(os.path.join(cls.media_folder, file_name))
 
             for i, file_name in enumerate(os.listdir(input_folder)):  # Import the images
-                full_file_name = os.path.join(input_folder, file_name)
-                local_file_path = os.path.join(media_folder, file_name)
-                if os.path.isfile(full_file_name) and cls.is_image(file_name) and not os.path.isfile(local_file_path):
-                    shutil.copy(full_file_name, local_file_path)
+                local_file_name = file_name
+                pattern = re.compile('^[0-9]{3}-')
+                if pattern.match(file_name[:4]):  # If importing files with order number (i.e. 015-test.jpg)
+                    local_file_name = file_name[4:]
+
+                file_path = os.path.join(input_folder, file_name)
+                local_file_path = os.path.join(cls.media_folder, local_file_name)
+                if os.path.isfile(file_path) and cls.is_image(file_name) and not os.path.isfile(local_file_path):
+                    shutil.copy(file_path, local_file_path)
 
                     # Create a thumbnail
                     im = Image.open(local_file_path)
                     im.thumbnail((400, 400))
-                    thumbnail = cls.get_thumbnail_file_name(file_name)
-                    im.save(os.path.join(media_folder, thumbnail), "JPEG")
+                    thumbnail = cls.get_thumbnail_file_name(local_file_name)
+                    im.save(os.path.join(cls.media_folder, thumbnail), "JPEG")
 
                     # Send information back to the webpage
                     data.append({
-                        'original_file_name': file_name,
+                        'original_file_name': local_file_name,
                         'thumbnail_file_name': thumbnail
                     })
 
@@ -93,27 +99,33 @@ class Data:
     def save_files(cls, output_folder, files_ordered):
         os.path.supports_unicode_filenames = True
         if os.path.exists(output_folder):
-            media_folder = settings.MEDIA_ROOT
             for i, file_name in enumerate(files_ordered.split(',')):
                 output_file_name = '{0:03d}-{1}'.format(i+1, file_name)
-                shutil.copy(os.path.join(media_folder, file_name), os.path.join(output_folder, output_file_name))
+                shutil.copy(os.path.join(cls.media_folder, file_name), os.path.join(output_folder, output_file_name))
                 cls.set_progress_percentage(i * 100 / len(files_ordered.split(',')))
         return []
 
     @classmethod
+    def get_file_name_with_extension(cls, file_name):
+        for full_file_name in os.listdir(cls.media_folder):  # Get from name with extension
+            if cls.is_image(full_file_name) and full_file_name.startswith('{}.'.format(file_name)):  # i.e. look for test. and find test.jpg
+                file_name = full_file_name
+        return file_name
+
+    @classmethod
     def change_file_name(cls, from_name, to_name):
-        media_folder = settings.MEDIA_ROOT
-        shutil.move(os.path.join(media_folder, from_name), os.path.join(media_folder, to_name))
+        from_name = cls.get_file_name_with_extension(from_name)
+        shutil.move(os.path.join(cls.media_folder, from_name), os.path.join(cls.media_folder, to_name))
         thumbnail_from_name = cls.get_thumbnail_file_name(from_name)
         thumbnail_to_name = cls.get_thumbnail_file_name(to_name)
-        shutil.move(os.path.join(media_folder, thumbnail_from_name), os.path.join(media_folder, thumbnail_to_name))
+        shutil.move(os.path.join(cls.media_folder, thumbnail_from_name), os.path.join(cls.media_folder, thumbnail_to_name))
         return {'thumbnail': thumbnail_to_name}
 
     @classmethod
     def delete_file(cls, file_name):
-        media_folder = settings.MEDIA_ROOT
-        os.remove(os.path.join(media_folder, file_name))
-        os.remove(os.path.join(media_folder, cls.get_thumbnail_file_name(file_name)))
+        file_name = cls.get_file_name_with_extension(file_name)
+        os.remove(os.path.join(cls.media_folder, file_name))
+        os.remove(os.path.join(cls.media_folder, cls.get_thumbnail_file_name(file_name)))
         return []
 
 
