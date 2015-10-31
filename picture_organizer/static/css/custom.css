@@ -101,3 +101,7 @@
   text-shadow: #000 0 1px;
   font-weight: normal;
 }
+
+.edit_file_name_input {
+   width: 400px !important;
+}

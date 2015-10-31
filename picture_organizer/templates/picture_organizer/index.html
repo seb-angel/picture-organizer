@@ -73,17 +73,19 @@
             </div>
 
             <div class="col-md-2">
-                <label for="tile_size">Tile Size</label>
-                <select id="tile_size" name="tile_size">
-                    <option value="100x100">100 x 100</option>
-                    <option value="150x150" selected>150 x 150</option>
-                    <option value="200x200">200 x 200</option>
-                    <option value="250x250">250 x 250</option>
-                    <option value="300x300">300 x 300</option>
-                    <option value="350x350">350 x 350</option>
-                    <option value="400x400">400 x 400</option>
-                    <option value="450x450">450 x 450</option>
-                </select>
+                <div class="form-group form-inline">
+                    <label for="tile_size">Size</label>
+                    <select class="form-control" id="tile_size" name="tile_size">
+                        <option value="100x100">100 x 100</option>
+                        <option value="150x150" selected>150 x 150</option>
+                        <option value="200x200">200 x 200</option>
+                        <option value="250x250">250 x 250</option>
+                        <option value="300x300">300 x 300</option>
+                        <option value="350x350">350 x 350</option>
+                        <option value="400x400">400 x 400</option>
+                        <option value="450x450">450 x 450</option>
+                    </select>
+                </div>
             </div>
 
             <div class="col-md-3">
@@ -125,6 +127,8 @@
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
             <h4 class="modal-title"></h4>
+            <button type="button" class="btn btn-default" id="btn_previous" onclick="return btnPreviousClick(this);">Previous</button>
+            <button type="button" class="btn btn-default pull-right" id="btn_next" onclick="return btnNextClick(this);">Next</button>
           </div>
           <div class="modal-body"></div>
           <div class="modal-footer">

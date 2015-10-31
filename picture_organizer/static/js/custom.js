@@ -113,6 +113,7 @@ function pictureClick(link) {
 
     $.fn.editable.defaults.mode = 'inline';
     $('.edit_file_name').editable({
+        inputclass: 'edit_file_name_input',
         success: function(response, newValue) {
             $.ajax({
                 "url": "/change_file_name?from_name=" + escape(this.text) + "&to_name=" + escape(newValue)
@@ -125,6 +126,27 @@ function pictureClick(link) {
     });
     $.fn.editable.defaults.mode = 'popup';
 
+    $('#btn_previous').prop("disabled", false);
+    $('#btn_next').prop("disabled", false);
+    if (headerNumber == 1) {
+        $('#btn_previous').prop("disabled", true);
+    }
+    else if (headerNumber == document.querySelectorAll('#columns .column').length) {
+        $('#btn_next').prop("disabled", true);
+    }
+
+    return false;
+}
+function btnPreviousClick(btn) {
+    var tile_number = parseInt($('#tile_number').html());
+    var cols = document.getElementById('columns');
+    pictureClick($(cols.childNodes[tile_number - 2]).find('a')[1]);
+    return false;
+}
+function btnNextClick(btn) {
+    var tile_number = parseInt($('#tile_number').html());
+    var cols = document.getElementById('columns');
+    pictureClick($(cols.childNodes[tile_number]).find('a')[1]);
     return false;
 }
 
